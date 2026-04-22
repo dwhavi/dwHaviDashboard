@@ -1,9 +1,10 @@
 import { getAll, create } from '../lib/store.js';
+import { requireAdmin } from '../lib/auth.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -11,36 +12,13 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      let projects = getAll();
       const { category, q, status } = req.query;
-
-      if (category) {
-        projects = projects.filter((p) => p.category === category);
-      }
-
-      if (status) {
-        projects = projects.filter((p) => p.status === status);
-      }
-
-      if (q) {
-        const keyword = q.toLowerCase();
-        projects = projects.filter((p) => {
-          const searchable = [
-            p.name,
-            p.summary,
-            ...(p.techStack || []),
-            ...(p.tags || []),
-          ]
-            .join(' ')
-            .toLowerCase();
-          return searchable.includes(keyword);
-        });
-      }
-
+      const projects = await getAll({ category, status, q });
       return res.status(200).json({ success: true, data: projects });
     }
 
     if (req.method === 'POST') {
+      if (!requireAdmin(req, res)) return;
       const { name, category } = req.body;
 
       if (!name || !category) {
@@ -50,7 +28,7 @@ export default async function handler(req, res) {
         });
       }
 
-      const project = create(req.body);
+      const project = await create(req.body);
       return res.status(201).json({ success: true, data: project });
     }
 

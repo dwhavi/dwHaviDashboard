@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchProjects, createProject, updateProject, deleteProject, categories } from "./data/projects";
+import { fetchProjects, createProject, updateProject, deleteProject, categories, getToken, setToken, clearToken } from "./data/projects";
 import useDebounce from "./hooks/useDebounce";
 import ProjectCard from "./components/ProjectCard";
 import ProjectModal from "./components/ProjectModal";
 import ProjectForm from "./components/ProjectForm";
+import LoginModal from "./components/LoginModal";
 import Toast from "./components/Toast";
 
 const statusFilters = [
@@ -25,6 +26,8 @@ export default function App() {
   const [allProjects, setAllProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(!!getToken());
+  const [showLogin, setShowLogin] = useState(window.location.hash === "#admin" && !getToken());
 
   const addToast = useCallback((message, type = "error") => {
     const id = Date.now();
@@ -55,6 +58,17 @@ export default function App() {
   useEffect(() => {
     loadProjects();
   }, [loadProjects]);
+
+  // #admin 해시 접근 시 로그인 모달 오픈
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash === "#admin" && !getToken()) {
+        setShowLogin(true);
+      }
+    };
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, []);
 
   // Esc 키 처리
   useEffect(() => {
@@ -128,15 +142,30 @@ export default function App() {
             </div>
             <h1 className="text-lg font-bold tracking-tight">dwHavi Dashboard</h1>
           </div>
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-gray-200 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            프로젝트 추가
-          </button>
+          <div className="flex items-center gap-2">
+            {isAdmin ? (
+              <>
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  프로젝트 추가
+                </button>
+                <button
+                  onClick={() => { clearToken(); setIsAdmin(false); window.location.hash = ""; }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-800 text-gray-400 text-sm hover:bg-gray-700 hover:text-white transition-colors"
+                  title="로그아웃"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                  </svg>
+                </button>
+              </>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -252,12 +281,6 @@ export default function App() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
                 <p className="text-sm mb-1">아직 등록된 프로젝트가 없습니다</p>
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="text-xs text-gray-400 hover:text-white transition-colors mt-2"
-                >
-                  + 프로젝트 추가하기
-                </button>
               </>
             )}
           </div>
@@ -265,6 +288,17 @@ export default function App() {
       </main>
 
       {/* Modals */}
+      {showLogin && (
+        <LoginModal
+          onClose={() => { setShowLogin(false); window.location.hash = ""; }}
+          onLogin={(token) => {
+            setToken(token);
+            setIsAdmin(true);
+            setShowLogin(false);
+            addToast("관리자로 로그인되었습니다.", "success");
+          }}
+        />
+      )}
       {selectedProject && (
         <ProjectModal
           project={selectedProject}
@@ -272,6 +306,7 @@ export default function App() {
           onClose={() => setSelectedProject(null)}
           onDelete={() => handleDeleteProject(selectedProject.id)}
           onEdit={handleEditProject}
+          isAdmin={isAdmin}
         />
       )}
       {showForm && (

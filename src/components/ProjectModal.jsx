@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-export default function ProjectModal({ project, index, onClose, onDelete, onEdit }) {
+export default function ProjectModal({ project, index, onClose, onDelete, onEdit, isAdmin }) {
   const gradients = [
     "from-indigo-500 to-purple-600",
     "from-emerald-500 to-teal-600",
@@ -215,6 +215,7 @@ export default function ProjectModal({ project, index, onClose, onDelete, onEdit
           </div>
 
           {/* Action buttons */}
+          {isAdmin && (
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               onClick={() => onEdit?.()}
@@ -235,6 +236,7 @@ export default function ProjectModal({ project, index, onClose, onDelete, onEdit
               삭제
             </button>
           </div>
+          )}
         </div>
       </div>
     </div>

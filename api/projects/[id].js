@@ -1,9 +1,10 @@
 import { getById, update, deleteById } from '../../lib/store.js';
+import { requireAdmin } from '../../lib/auth.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -13,7 +14,7 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const project = getById(id);
+      const project = await getById(id);
       if (!project) {
         return res.status(404).json({ success: false, error: 'Project not found' });
       }
@@ -21,7 +22,8 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PUT') {
-      const project = update(id, req.body);
+      if (!requireAdmin(req, res)) return;
+      const project = await update(id, req.body);
       if (!project) {
         return res.status(404).json({ success: false, error: 'Project not found' });
       }
@@ -29,7 +31,8 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'DELETE') {
-      const deleted = deleteById(id);
+      if (!requireAdmin(req, res)) return;
+      const deleted = await deleteById(id);
       if (!deleted) {
         return res.status(404).json({ success: false, error: 'Project not found' });
       }

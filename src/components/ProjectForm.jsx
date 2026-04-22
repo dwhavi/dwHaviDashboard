@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { fetchReadmeStructure, uploadScreenshot } from "../data/projects";
+import { fetchReadmeStructure, uploadScreenshot, uploadToDrive, resolveDriveUrl } from "../data/projects";
 
 export default function ProjectForm({ onClose, onSave, project }) {
   const [form, setForm] = useState({
@@ -22,6 +22,11 @@ export default function ProjectForm({ onClose, onSave, project }) {
   const [readmeLoading, setReadmeLoading] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState(project?.screenshot || "");
   const [uploading, setUploading] = useState(false);
+  const [screenshotTab, setScreenshotTab] = useState("upload"); // "upload" | "url"
+  const [driveUrlInput, setDriveUrlInput] = useState("");
+  const [driveUrlLoading, setDriveUrlLoading] = useState(false);
+  const [uploadTarget, setUploadTarget] = useState("blob"); // "blob" | "drive"
+  const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef(null);
 
   const handleChange = (e) => {
@@ -55,13 +60,32 @@ export default function ProjectForm({ onClose, onSave, project }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setUploadError("");
     try {
-      const url = await uploadScreenshot(file);
+      const url = uploadTarget === "drive" ? await uploadToDrive(file) : await uploadScreenshot(file);
       setScreenshotUrl(url);
     } catch (err) {
+      setUploadError(err.message || "업로드 실패");
       console.error("Upload failed:", err);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleDriveUrlSubmit = async () => {
+    const url = driveUrlInput.trim();
+    if (!url) return;
+    setDriveUrlLoading(true);
+    setUploadError("");
+    try {
+      const resolvedUrl = await resolveDriveUrl(url);
+      setScreenshotUrl(resolvedUrl);
+      setDriveUrlInput("");
+    } catch (err) {
+      setUploadError(err.message || "URL 변환 실패");
+      console.error("Drive URL failed:", err);
+    } finally {
+      setDriveUrlLoading(false);
     }
   };
 
@@ -263,7 +287,7 @@ export default function ProjectForm({ onClose, onSave, project }) {
             <input type="text" name="tags" value={form.tags} onChange={handleChange} className={inputClass} />
           </div>
 
-          {/* Screenshot upload */}
+          {/* Screenshot */}
           <div>
             <label className={labelClass}>스크린샷</label>
             <input
@@ -273,35 +297,125 @@ export default function ProjectForm({ onClose, onSave, project }) {
               accept="image/*"
               className="hidden"
             />
+
+            {/* Tab buttons */}
+            {!screenshotUrl && (
+              <div className="flex gap-1 mb-3 bg-gray-800/50 rounded-lg p-1">
+                <button
+                  type="button"
+                  onClick={() => { setScreenshotTab("upload"); setUploadError(""); }}
+                  className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
+                    screenshotTab === "upload"
+                      ? "bg-gray-700 text-white"
+                      : "text-gray-500 hover:text-gray-300"
+                  }`}
+                >
+                  파일 업로드
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setScreenshotTab("url"); setUploadError(""); }}
+                  className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
+                    screenshotTab === "url"
+                      ? "bg-gray-700 text-white"
+                      : "text-gray-500 hover:text-gray-300"
+                  }`}
+                >
+                  구글 드라이브 URL
+                </button>
+              </div>
+            )}
+
+            {/* Error message */}
+            {uploadError && (
+              <p className="text-xs text-red-400 mb-2">{uploadError}</p>
+            )}
+
             {screenshotUrl ? (
               <div className="relative w-full h-32 rounded-lg overflow-hidden border border-gray-700/50">
                 <img src={screenshotUrl} alt="screenshot" className="w-full h-full object-cover" />
                 <button
                   type="button"
-                  onClick={() => { setScreenshotUrl(""); }}
+                  onClick={() => { setScreenshotUrl(""); setUploadError(""); }}
                   className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-black/50 text-white/70 hover:text-white"
                 >
                   ✕
                 </button>
               </div>
+            ) : screenshotTab === "url" ? (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={driveUrlInput}
+                    onChange={(e) => setDriveUrlInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleDriveUrlSubmit()}
+                    placeholder="https://drive.google.com/file/d/..."
+                    className={inputClass}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleDriveUrlSubmit}
+                    disabled={driveUrlLoading || !driveUrlInput.trim()}
+                    className="shrink-0 px-3 py-2 rounded-lg bg-gray-800 text-gray-300 text-sm hover:bg-gray-700 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {driveUrlLoading ? (
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    ) : "변환"}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-600">구글 드라이브 파일 링크를 붙여넣으면 공개 이미지 URL로 변환합니다.</p>
+              </div>
             ) : (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full h-32 border-2 border-dashed border-gray-700/50 rounded-lg flex flex-col items-center justify-center gap-1.5 text-gray-600 hover:border-gray-500/50 hover:text-gray-400 transition-colors cursor-pointer"
-              >
-                {uploading ? (
-                  <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                ) : (
-                  <>
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+              <div className="space-y-2">
+                {/* Upload target toggle */}
+                <div className="flex gap-1 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setUploadTarget("blob")}
+                    className={`px-2.5 py-1 rounded text-xs transition-colors ${
+                      uploadTarget === "blob"
+                        ? "bg-gray-700 text-white"
+                        : "text-gray-600 hover:text-gray-400"
+                    }`}
+                  >
+                    Vercel Blob
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadTarget("drive")}
+                    className={`px-2.5 py-1 rounded text-xs transition-colors ${
+                      uploadTarget === "drive"
+                        ? "bg-gray-700 text-white"
+                        : "text-gray-600 hover:text-gray-400"
+                    }`}
+                  >
+                    구글 드라이브
+                  </button>
+                </div>
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-32 border-2 border-dashed border-gray-700/50 rounded-lg flex flex-col items-center justify-center gap-1.5 text-gray-600 hover:border-gray-500/50 hover:text-gray-400 transition-colors cursor-pointer"
+                >
+                  {uploading ? (
+                    <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    <span className="text-xs">클릭하여 이미지 업로드</span>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+                      </svg>
+                      <span className="text-xs">
+                        {uploadTarget === "drive" ? "구글 드라이브에 업로드" : "클릭하여 이미지 업로드"}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             )}
           </div>
