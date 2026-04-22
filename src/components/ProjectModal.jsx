@@ -121,7 +121,7 @@ export default function ProjectModal({ project, index, onClose, onDelete, onEdit
           {/* Description */}
           <div>
             <SectionTitle>상세 설명</SectionTitle>
-            <p className="text-gray-400 text-sm leading-relaxed">{project.description}</p>
+            <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-line">{project.description}</p>
           </div>
 
           {/* Architecture */}
