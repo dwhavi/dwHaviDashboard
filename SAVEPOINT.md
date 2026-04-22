@@ -12,6 +12,7 @@
 - [x] Phase 6: Neon PostgreSQL 연동 (JSON 파일 → DB 교체)
 - [x] Phase 7: Vercel Blob 스크린샷 업로드
 - [x] Phase 8: 구글 드라이브 스크린샷 연동 (URL 변환 + 파일 업로드)
+- [x] Bugfix: README 불러오기 실패 시 에러 메시지 표시
 
 ## 배포 정보
 - **URL:** https://dw-havi-dashboard.vercel.app
