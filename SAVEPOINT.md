@@ -13,6 +13,8 @@
 - [x] Phase 7: Vercel Blob 스크린샷 업로드
 - [x] Phase 8: 구글 드라이브 스크린샷 연동 (URL 변환 + 파일 업로드)
 - [x] Bugfix: README 불러오기 실패 시 에러 메시지 표시
+- [ ] Bugfix: 프로젝트 저장 500 에러 (필드 매핑 수정 완료, 동작 확인 필요)
+- [ ] Neon DB 콜드 스타트(슬립) 문제 확인 필요
 
 ## 배포 정보
 - **URL:** https://dw-havi-dashboard.vercel.app
