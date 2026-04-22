@@ -36,6 +36,7 @@ export default function ProjectForm({ onClose, onSave, project }) {
   const handleLoadReadme = async () => {
     if (!form.githubUrl) return;
     setReadmeLoading(true);
+    setUploadError("");
     try {
       const data = await fetchReadmeStructure(form.githubUrl);
       if (data) {
@@ -50,7 +51,7 @@ export default function ProjectForm({ onClose, onSave, project }) {
         });
       }
     } catch (err) {
-      console.error("README fetch failed:", err);
+      setUploadError(err.message || "README 불러오기 실패");
     } finally {
       setReadmeLoading(false);
     }

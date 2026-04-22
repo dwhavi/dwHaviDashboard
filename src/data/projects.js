@@ -119,6 +119,9 @@ export async function fetchReadmeStructure(githubUrl) {
     body: JSON.stringify({ githubUrl }),
   });
   const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.error || `README 불러오기 실패 (${res.status})`);
+  }
   return json.data;
 }
 
