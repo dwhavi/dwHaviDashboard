@@ -135,6 +135,7 @@ export default function ProjectModal({ project, index, onClose, onDelete, onEdit
           )}
 
           {/* Tech Stack */}
+          {project.techStack && project.techStack.length > 0 && (
           <div>
             <SectionTitle>Tech Stack</SectionTitle>
             <div className="flex flex-wrap gap-2">
@@ -145,9 +146,12 @@ export default function ProjectModal({ project, index, onClose, onDelete, onEdit
               ))}
             </div>
           </div>
+          )}
 
           {/* Two column: Goals + Features */}
+          {(project.goals?.length > 0 || project.features?.length > 0) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {project.goals && project.goals.length > 0 && (
             <div>
               <SectionTitle>목표</SectionTitle>
               <ul className="space-y-1.5">
@@ -159,6 +163,8 @@ export default function ProjectModal({ project, index, onClose, onDelete, onEdit
                 ))}
               </ul>
             </div>
+            )}
+            {project.features && project.features.length > 0 && (
             <div>
               <SectionTitle>주요 기능</SectionTitle>
               <ul className="space-y-1.5">
@@ -170,7 +176,9 @@ export default function ProjectModal({ project, index, onClose, onDelete, onEdit
                 ))}
               </ul>
             </div>
+            )}
           </div>
+          )}
 
           {/* Tags */}
           {project.tags && project.tags.length > 0 && (

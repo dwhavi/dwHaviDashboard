@@ -50,7 +50,9 @@ function parseReadme(readmeText) {
       if (items) {
         result.techStack = items
           .map((item) => item.replace(/^[-*|]\s*/, '').trim())
-          .filter((item) => item.length > 1 && item.length < 40);
+          .filter((item) => item.length > 1 && item.length < 40)
+          // Filter out common section labels that appear in table-style READMEs
+          .filter((item) => !/^(Layer|Technology|Frontend|Backend|Database|Storage|Deploy|Auth|Infrastructure|DevOps|Tool|Library|Framework|Platform|Service|Category|Type)$/i.test(item));
       }
       break;
     }
