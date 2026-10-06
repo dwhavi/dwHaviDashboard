@@ -1,4 +1,4 @@
-import { getAll, create } from '../lib/store.js';
+import { getAll, create } from '../lib/store-v2.js';
 import { requireAdmin } from '../lib/auth.js';
 
 export default async function handler(req, res) {

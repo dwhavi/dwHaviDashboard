@@ -1,5 +1,20 @@
 import { useEffect } from "react";
 
+function SectionTitle({ children }) {
+  return (
+    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{children}</h3>
+  );
+}
+
+function InfoRow({ label, value }) {
+  return (
+    <div className="flex items-center gap-3 text-sm">
+      <span className="text-gray-600 shrink-0 w-24">{label}</span>
+      <span className="text-gray-300">{value || "-"}</span>
+    </div>
+  );
+}
+
 export default function ProjectModal({ project, index, onClose, onDelete, onEdit, isAdmin }) {
   const gradients = [
     "from-indigo-500 to-purple-600",
@@ -48,17 +63,6 @@ export default function ProjectModal({ project, index, onClose, onDelete, onEdit
       day: "numeric",
     });
   };
-
-  const SectionTitle = ({ children }) => (
-    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{children}</h3>
-  );
-
-  const InfoRow = ({ label, value }) => (
-    <div className="flex items-center gap-3 text-sm">
-      <span className="text-gray-600 shrink-0 w-24">{label}</span>
-      <span className="text-gray-300">{value || "-"}</span>
-    </div>
-  );
 
   return (
     <div
@@ -124,13 +128,39 @@ export default function ProjectModal({ project, index, onClose, onDelete, onEdit
             <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-line">{project.description}</p>
           </div>
 
-          {/* Architecture */}
-          {project.architecture && (
+          {/* Service Links */}
+          {((project.serviceLinks && project.serviceLinks.length > 0) || project.serviceUrl) && (
             <div>
-              <SectionTitle>아키텍처</SectionTitle>
-              <p className="text-gray-400 text-sm leading-relaxed bg-gray-800/30 p-4 rounded-xl border border-gray-800/50">
-                {project.architecture}
-              </p>
+              <SectionTitle>링크</SectionTitle>
+              <div className="flex flex-wrap gap-2">
+                {(project.serviceLinks && project.serviceLinks.length > 0
+                  ? project.serviceLinks
+                  : [{ label: 'Live', url: project.serviceUrl }]
+                ).map((link, i) => (
+                  <a
+                    key={i}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black hover:bg-gray-200 transition-colors text-xs font-medium"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                    {link.label || 'Link'}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 기획서 원문 */}
+          {project.planContent && (
+            <div>
+              <SectionTitle>기획서 {project.planFilename ? `· ${project.planFilename}` : ''}</SectionTitle>
+              <pre className="text-xs text-gray-400 leading-relaxed bg-gray-800/30 p-4 rounded-xl border border-gray-800/50 overflow-x-auto whitespace-pre-wrap max-h-96 overflow-y-auto">
+                {project.planContent}
+              </pre>
             </div>
           )}
 
@@ -148,35 +178,18 @@ export default function ProjectModal({ project, index, onClose, onDelete, onEdit
           </div>
           )}
 
-          {/* Two column: Goals + Features */}
-          {(project.goals?.length > 0 || project.features?.length > 0) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {project.goals && project.goals.length > 0 && (
-            <div>
-              <SectionTitle>목표</SectionTitle>
-              <ul className="space-y-1.5">
-                {project.goals.map((goal) => (
-                  <li key={goal} className="flex items-start gap-2 text-sm text-gray-400">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    {goal}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            )}
-            {project.features && project.features.length > 0 && (
-            <div>
-              <SectionTitle>주요 기능</SectionTitle>
-              <ul className="space-y-1.5">
-                {project.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2 text-sm text-gray-400">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            )}
+          {/* Features */}
+          {project.features && project.features.length > 0 && (
+          <div>
+            <SectionTitle>주요 기능</SectionTitle>
+            <ul className="space-y-1.5">
+              {project.features.map((feature) => (
+                <li key={feature} className="flex items-start gap-2 text-sm text-gray-400">
+                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
           </div>
           )}
 
@@ -195,6 +208,7 @@ export default function ProjectModal({ project, index, onClose, onDelete, onEdit
           )}
 
           {/* Links */}
+          {project.githubUrl && (
           <div className="flex items-center gap-3 pt-2 border-t border-gray-800">
             <a
               href={project.githubUrl}
@@ -207,20 +221,8 @@ export default function ProjectModal({ project, index, onClose, onDelete, onEdit
               </svg>
               GitHub
             </a>
-            {project.serviceUrl && (
-              <a
-                href={project.serviceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black hover:bg-gray-200 transition-colors text-sm font-medium"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                </svg>
-                Visit Site
-              </a>
-            )}
           </div>
+          )}
 
           {/* Action buttons */}
           {isAdmin && (

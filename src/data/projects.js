@@ -88,41 +88,19 @@ export async function uploadScreenshot(file) {
   return json.url;
 }
 
-export async function uploadToDrive(file) {
+export async function parsePlanFile(file, projectHint = '') {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(`${API_BASE}/api/drive-upload`, {
+  const qs = projectHint ? `?projectHint=${encodeURIComponent(projectHint)}` : '';
+  const res = await fetch(`${API_BASE}/api/plan-parse${qs}`, {
     method: 'POST',
-    headers: { ...authHeaders() },
     body: formData,
   });
   const json = await res.json();
-  if (!json.success) throw new Error(json.error || 'Drive upload failed');
-  return json.url;
-}
-
-export async function resolveDriveUrl(url) {
-  const res = await fetch(`${API_BASE}/api/drive-url`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify({ url }),
-  });
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error || 'Drive URL conversion failed');
-  return json.url;
-}
-
-export async function fetchReadmeStructure(githubUrl) {
-  const res = await fetch(`${API_BASE}/api/readme`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ githubUrl }),
-  });
-  const json = await res.json();
   if (!res.ok || !json.success) {
-    throw new Error(json.error || `README 불러오기 실패 (${res.status})`);
+    throw new Error(json.error || `기획서 파싱 실패 (${res.status})`);
   }
-  return json.data;
+  return { data: json.data, warnings: json.warnings || [] };
 }
 
 export const categoryMap = {

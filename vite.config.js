@@ -80,12 +80,8 @@ export default defineConfig({
             extraQuery = { id }
           } else if (pathname === '/api/upload') {
             handlerPath = path.join(__dirname, 'api', 'upload.js')
-          } else if (pathname === '/api/drive-upload') {
-            handlerPath = path.join(__dirname, 'api', 'drive-upload.js')
-          } else if (pathname === '/api/drive-url') {
-            handlerPath = path.join(__dirname, 'api', 'drive-url.js')
-          } else if (pathname === '/api/readme') {
-            handlerPath = path.join(__dirname, 'api', 'readme.js')
+          } else if (pathname === '/api/plan-parse') {
+            handlerPath = path.join(__dirname, 'api', 'plan-parse.js')
           } else if (pathname === '/api/auth') {
             handlerPath = path.join(__dirname, 'api', 'auth.js')
           }

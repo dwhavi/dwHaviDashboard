@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchProjects, createProject, updateProject, deleteProject, categories, getToken, setToken, clearToken } from "./data/projects";
+import { fetchProjects, fetchProject, createProject, updateProject, deleteProject, categories, getToken, setToken, clearToken } from "./data/projects";
 import useDebounce from "./hooks/useDebounce";
 import ProjectCard from "./components/ProjectCard";
 import ProjectModal from "./components/ProjectModal";
@@ -48,7 +48,7 @@ export default function App() {
       if (debouncedSearch.trim()) params.q = debouncedSearch.trim();
       const data = await fetchProjects(params);
       setAllProjects(data);
-    } catch (err) {
+    } catch {
       addToast("프로젝트를 불러오지 못했습니다.");
     } finally {
       setLoading(false);
@@ -56,6 +56,7 @@ export default function App() {
   }, [activeCategory, activeStatus, debouncedSearch, addToast]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 초기 데이터 로드용 fetch
     loadProjects();
   }, [loadProjects]);
 
@@ -83,9 +84,16 @@ export default function App() {
     return () => document.removeEventListener("keydown", handleEsc);
   }, [selectedProject, editingProject, showForm]);
 
-  const handleCardClick = (project, index) => {
+  const handleCardClick = async (project, index) => {
     setSelectedProject(project);
     setSelectedIndex(index);
+    // 상세에서 기획서 원문 표시용 단건 조회 (plan_content 포함)
+    try {
+      const full = await fetchProject(project.id);
+      if (full) setSelectedProject(full);
+    } catch {
+      /* 목록 데이터로 표시 유지 */
+    }
   };
 
   const handleSaveProject = async (formData) => {
@@ -104,7 +112,7 @@ export default function App() {
         setShowForm(false);
         addToast("프로젝트가 추가되었습니다.", "success");
       }
-    } catch (err) {
+    } catch {
       addToast(formData.id ? "프로젝트 수정에 실패했습니다." : "프로젝트 추가에 실패했습니다.");
     }
   };
@@ -116,7 +124,7 @@ export default function App() {
       setAllProjects((prev) => prev.filter((p) => p.id !== id));
       setSelectedProject(null);
       addToast("프로젝트가 삭제되었습니다.", "success");
-    } catch (err) {
+    } catch {
       addToast("삭제에 실패했습니다.");
     }
   };

@@ -7,6 +7,12 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   globalIgnores(['dist']),
   {
+    files: ['api/**/*.js', 'lib/planParser.js', 'lib/store-v2.js', 'lib/init-db-v2.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
     files: ['**/*.{js,jsx}'],
     extends: [
       js.configs.recommended,
@@ -24,6 +30,17 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+  {
+    // V1 잔재(미사용) + vite dev 미들웨어: 린트 면제 (마지막에 두어 override)
+    files: ['lib/store.js', 'lib/init-db.js', 'lib/auth.js', 'vite.config.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+    rules: {
+      'no-unused-vars': 'off',
+      'no-undef': 'off',
     },
   },
 ])
