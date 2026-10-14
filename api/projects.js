@@ -1,5 +1,5 @@
-import { getAll, create } from '../lib/store-v2.js';
-import { requireAdmin } from '../lib/auth.js';
+import { getAll, create, serializePublicList } from '../lib/store-v2.js';
+import { requireAdmin, verifyToken } from '../lib/auth.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,7 +14,11 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const { category, q, status } = req.query;
       const projects = await getAll({ category, status, q });
-      return res.status(200).json({ success: true, data: projects });
+      // 비로그인 호출은 공개 필드만 (서버 강제). 관리자는 전체 필드.
+      if (verifyToken(req)) {
+        return res.status(200).json({ success: true, data: projects });
+      }
+      return res.status(200).json({ success: true, data: serializePublicList(projects) });
     }
 
     if (req.method === 'POST') {

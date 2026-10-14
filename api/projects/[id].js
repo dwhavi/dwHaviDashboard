@@ -1,5 +1,5 @@
-import { getById, update, deleteById } from '../../lib/store-v2.js';
-import { requireAdmin } from '../../lib/auth.js';
+import { getById, update, deleteById, serializePublic } from '../../lib/store-v2.js';
+import { requireAdmin, verifyToken } from '../../lib/auth.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -18,7 +18,11 @@ export default async function handler(req, res) {
       if (!project) {
         return res.status(404).json({ success: false, error: 'Project not found' });
       }
-      return res.status(200).json({ success: true, data: project });
+      // 비로그인 호출은 공개 필드만 (서버 강제). 관리자는 전체 필드.
+      if (verifyToken(req)) {
+        return res.status(200).json({ success: true, data: project });
+      }
+      return res.status(200).json({ success: true, data: serializePublic(project) });
     }
 
     if (req.method === 'PUT') {
