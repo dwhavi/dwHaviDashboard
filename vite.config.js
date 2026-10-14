@@ -84,6 +84,8 @@ export default defineConfig({
             handlerPath = path.join(__dirname, 'api', 'plan-parse.js')
           } else if (pathname === '/api/auth') {
             handlerPath = path.join(__dirname, 'api', 'auth.js')
+          } else if (pathname === '/api/sync') {
+            handlerPath = path.join(__dirname, 'api', 'sync.js')
           }
 
           if (!handlerPath || !fs.existsSync(handlerPath)) return next()
