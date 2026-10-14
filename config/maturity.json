@@ -1,0 +1,5 @@
+{
+  "seed": { "maxCommits": 5, "maxFiles": 3 },
+  "testNamePattern": "^(test|tmp|demo|sandbox|sample|example|trial|playground)[-_]?|[-_](test|tmp|demo|sandbox|sample|example)$",
+  "readmeTemplateMinLength": 200
+}
