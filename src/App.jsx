@@ -27,7 +27,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState([]);
   const [isAdmin, setIsAdmin] = useState(!!getToken());
-  const [showLogin, setShowLogin] = useState(window.location.hash === "#admin" && !getToken());
+  const [showLogin, setShowLogin] = useState(window.location.hash === "#whoami" && !getToken());
 
   const addToast = useCallback((message, type = "error") => {
     const id = Date.now();
@@ -60,10 +60,10 @@ export default function App() {
     loadProjects();
   }, [loadProjects]);
 
-  // #admin 해시 접근 시 로그인 모달 오픈
+  // #whoami 해시 접근 시 로그인 모달 오픈
   useEffect(() => {
     const handleHash = () => {
-      if (window.location.hash === "#admin" && !getToken()) {
+      if (window.location.hash === "#whoami" && !getToken()) {
         setShowLogin(true);
       }
     };

@@ -13,7 +13,7 @@
 | Frontend | React 19 + Vite 8 + Tailwind CSS v4 |
 | Backend | Vercel Serverless Functions |
 | Database | Neon PostgreSQL (`projects_v2`) |
-| Auth | 비밀번호 JWT (`#admin`) |
+| Auth | 비밀번호 JWT (`#whoami`) |
 | Storage | Vercel Blob (스크린샷 단일) |
 | Deploy | Vercel |
 
